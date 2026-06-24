@@ -6,7 +6,6 @@ export default function ContestPage() {
   const {contestId} = useParams();
 
   const [problems, setProblems] = useState([]);
-  const [duration, setDuration] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
 
   const getContest = async () => {
@@ -21,10 +20,13 @@ export default function ContestPage() {
       }));
 
       setProblems(formattedProblems);
+  
+      const createdAt = new Date(response.data.createdAt);
+      const durationSeconds = response.data.duration * 60;
+      const elapsedSeconds = Math.floor((Date.now() - createdAt) / 1000);
+      const remaining = Math.max(0, durationSeconds - elapsedSeconds);
 
-      const contestDuration = Number(response.data.duration);
-      setDuration(contestDuration);
-      setTimeLeft(contestDuration * 60)
+      setTimeLeft(remaining);
 
     } catch (error) {
       console.log(error);
@@ -36,18 +38,14 @@ export default function ContestPage() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      if(timeLeft <= 0) return;
 
-    return () => clearInterval(timer);
-  }, []);
+      const timer = setInterval(() => {
+          setTimeLeft(prev => Math.max(0, prev - 1));
+      }, 1000);
+
+      return () => clearInterval(timer);
+  }, [timeLeft > 0]);
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);

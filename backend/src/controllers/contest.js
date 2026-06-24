@@ -14,17 +14,9 @@ const generateContest = async (req, res) => {
 
   try {
   
-    const userRes = await axios.get(
-      `https://codeforces.com/api/user.info?handles=${handle}`,
-    );
-
-    const statusRes = await axios.get(
-      `https://codeforces.com/api/user.status?handle=${handle}`,
-    );
-
-    const problemsRes = await axios.get(
-      "https://codeforces.com/api/problemset.problems",
-    );
+    const userRes = await axios.get(`https://codeforces.com/api/user.info?handles=${handle}`);
+    const statusRes = await axios.get(`https://codeforces.com/api/user.status?handle=${handle}`);
+    const problemsRes = await axios.get("https://codeforces.com/api/problemset.problems");
 
     const user = userRes.data.result[0];
     const submissions = statusRes.data.result;
@@ -120,13 +112,6 @@ const generateContest = async (req, res) => {
       contestId: contest.id
     })
 
-    // return res.status(200).json({
-    //   handle,
-    //   rating: userRating,
-    //   duration,
-    //   problems: selectedProblems,
-    //   contestId: contest.id
-    // });
 
   } catch (err) {
     return res.status(500).json({
@@ -142,7 +127,8 @@ const getContestProblems = async (req, res) => {
       const problems = await getContestProblemsById(contestId);    
       const contest = await getContestById(contestId);
       const duration = contest.duration;
-      return res.status(200).json({problems, duration});
+      const createdAt = contest.created_at;
+      return res.status(200).json({problems, duration, createdAt});
     } catch (error) {
       return res.status(500).json({
         error: "Failed to get problems",

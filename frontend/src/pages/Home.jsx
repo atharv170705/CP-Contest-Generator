@@ -67,8 +67,6 @@ export default function Home() {
       duration,
     };
 
-    console.log(payload);
-
     const response = await axios.post('http://localhost:8000/generate-contest', payload);
     
     const contestId = response.data.contestId;
