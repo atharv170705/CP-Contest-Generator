@@ -20,4 +20,14 @@ const getUserByHandleDb = async (handle) => {
     return rows[0];
 }
 
-export {createUserDb, getUserByHandleDb}
+const getUserByIdDb = async (id) => {
+    const query = `
+        SELECT *
+        FROM users
+        WHERE users.id = $1;
+    `;
+    const {rows} = await pool.query(query, [id]);
+    return rows[0];
+};
+
+export {createUserDb, getUserByHandleDb, getUserByIdDb};

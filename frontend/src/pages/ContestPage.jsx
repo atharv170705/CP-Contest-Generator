@@ -16,10 +16,11 @@ export default function ContestPage() {
         contestId: item.contest_id_cf,
         index: item.problem_index,
         name: item.problem_name,
-        rating: item.rating
+        rating: item.rating,
+        status: item.status
       }));
 
-      setProblems(formattedProblems);
+      setProblems(formattedProblems);  
   
       const createdAt = new Date(response.data.createdAt);
       const durationSeconds = response.data.duration * 60;
@@ -58,15 +59,33 @@ export default function ContestPage() {
   };
 
   const getStatus = (status) => {
-    switch (status) {
+    switch(status){
       case "solved":
-        return "✓";
+        return (
+          <span className="text-green-600 font-bold">
+            ✓ Solved
+          </span>
+        );
+
       case "wrong":
-        return "✗";
+        return (
+          <span className="text-red-600 font-bold">
+            ✗ Wrong
+          </span>
+        );
+
       default:
-        return "⏳";
+        return (
+          <span className="text-yellow-600">
+            ⏳ Pending
+          </span>
+        );
     }
   };
+
+  const checkProgress = async () => {
+      await getContest();
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -128,7 +147,7 @@ export default function ContestPage() {
                   <td className="border px-4 py-3">{problem.rating}</td>
 
                   <td className="border px-4 py-3 text-lg">
-                    {/* {getStatus(problem.status)} */}
+                    {getStatus(problem.status)}
                   </td>
                 </tr>
               ))}
@@ -149,6 +168,7 @@ export default function ContestPage() {
               text-white
               hover:bg-blue-700
             "
+            onClick={checkProgress}
           >
             Check Progress
           </button>

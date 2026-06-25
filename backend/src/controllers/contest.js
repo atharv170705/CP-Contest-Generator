@@ -1,5 +1,5 @@
 import axios from "axios";
-import { createUser, getUserByHandle } from "../model/user.model.js";
+import { createUser, getUserByHandle, getUserById } from "../model/user.model.js";
 import { createContest, getContestById } from "../model/contest.model.js";
 import { createContestProblems, getContestProblemsById } from "../model/contestProblems.model.js";
 
@@ -128,7 +128,37 @@ const getContestProblems = async (req, res) => {
       const contest = await getContestById(contestId);
       const duration = contest.duration;
       const createdAt = contest.created_at;
-      return res.status(200).json({problems, duration, createdAt});
+    
+      const user = await getUserById(contest.user_id);
+      const statusRes = await axios.get(`https://codeforces.com/api/user.status?handle=${user.handle}`);
+      const submissions = statusRes.data.result;
+
+      const solved = new Set();
+      const attempted = new Set();
+
+      for(const sub of submissions){
+          const key = `${sub.problem.contestId}-${sub.problem.index}`;
+          attempted.add(key);
+          if(sub.verdict === "OK"){
+              solved.add(key);
+          }
+      }
+
+      const progress = problems.map(problem => {
+            const key = `${problem.contest_id_cf}-${problem.problem_index}`
+            let status = "pending";
+            if (solved.has(key)) {
+                status = "solved";
+            } else if (attempted.has(key)) {
+                status = "wrong";
+            }
+            else {
+                status = "pending";
+            }
+            return {...problem, status};
+        });
+
+      return res.status(200).json({problems: progress, duration, createdAt});
     } catch (error) {
       return res.status(500).json({
         error: "Failed to get problems",

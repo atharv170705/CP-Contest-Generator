@@ -1,4 +1,4 @@
-import { createUserDb, getUserByHandleDb } from "../db/user.db.js";
+import { createUserDb, getUserByHandleDb, getUserByIdDb } from "../db/user.db.js";
 
 const createUser = async (user) => {
     try {
@@ -16,4 +16,12 @@ const getUserByHandle = async (handle) => {
     }
 }
 
-export {createUser, getUserByHandle};
+const getUserById = async (id) => {
+    try {
+        return await getUserByIdDb(id);
+    } catch (error) {
+        throw new Error("Error getting user");
+    }
+}
+
+export {createUser, getUserByHandle, getUserById};
