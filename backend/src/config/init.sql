@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS contests (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id),
     duration INTEGER NOT NULL,
+    is_ended BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS contest_problems (

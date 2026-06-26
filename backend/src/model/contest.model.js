@@ -1,4 +1,4 @@
-import { createContestDb, getContestByIdDb } from "../db/contest.db.js";
+import { createContestDb, endContestDb, getContestByIdDb } from "../db/contest.db.js";
 
 const createContest = async (contest) => {
     try {
@@ -16,4 +16,12 @@ const getContestById = async (contestId) => {
     }
 }
 
-export {createContest, getContestById};
+const endContestById = async (contestId) => {
+    try {
+        return await endContestDb(contestId);
+    } catch (error) {
+        throw new Error("Error ending contest");
+    }
+}
+
+export {createContest, getContestById, endContestById};

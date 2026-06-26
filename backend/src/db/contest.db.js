@@ -20,4 +20,15 @@ const getContestByIdDb = async (contestId) => {
     return rows[0];
 }
 
-export {createContestDb, getContestByIdDb};
+const endContestDb = async (contestId) => {
+    const query = `
+        UPDATE contests
+        SET is_ended = TRUE
+        WHERE id = $1
+        RETURNING *;
+    `;
+    const {rows} = await pool.query(query, [contestId]);
+    return rows[0];
+}
+
+export {createContestDb, getContestByIdDb, endContestDb};

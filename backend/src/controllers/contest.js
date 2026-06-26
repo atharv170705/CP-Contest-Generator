@@ -1,6 +1,6 @@
 import axios from "axios";
 import { createUser, getUserByHandle, getUserById } from "../model/user.model.js";
-import { createContest, getContestById } from "../model/contest.model.js";
+import { createContest, endContestById, getContestById } from "../model/contest.model.js";
 import { createContestProblems, getContestProblemsById } from "../model/contestProblems.model.js";
 
 const generateContest = async (req, res) => {
@@ -129,6 +129,12 @@ const getContestProblems = async (req, res) => {
       const duration = contest.duration;
       const createdAt = contest.created_at;
     
+      const endTime = new Date(createdAt).getTime() + duration * 60 * 1000;
+      if (!contest.is_ended && Date.now() >= endTime) {
+          await endContestById(contestId);
+          contest.is_ended = true;
+      }
+
       const user = await getUserById(contest.user_id);
       const statusRes = await axios.get(`https://codeforces.com/api/user.status?handle=${user.handle}`);
       const submissions = statusRes.data.result;
@@ -157,8 +163,8 @@ const getContestProblems = async (req, res) => {
             }
             return {...problem, status};
         });
-
-      return res.status(200).json({problems: progress, duration, createdAt});
+      
+      return res.status(200).json({problems: progress, duration, createdAt, isEnded: contest.is_ended});
     } catch (error) {
       return res.status(500).json({
         error: "Failed to get problems",
@@ -166,4 +172,19 @@ const getContestProblems = async (req, res) => {
     }
 }
 
-export { generateContest, getContestProblems };
+const endContest = async (req, res) => {
+    const {contestId} = req.params;
+      
+    try {
+        await endContestById(contestId);
+        return res.status(200).json({
+            message: "Contest ended successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            error: "Failed to end contest"
+        });
+    }
+}
+
+export { generateContest, getContestProblems, endContest };

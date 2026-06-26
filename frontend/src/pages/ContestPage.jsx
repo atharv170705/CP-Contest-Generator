@@ -7,6 +7,7 @@ export default function ContestPage() {
 
   const [problems, setProblems] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [isEnded, setIsEnded] = useState(false);
 
   const getContest = async () => {
     try {
@@ -29,6 +30,8 @@ export default function ContestPage() {
 
       setTimeLeft(remaining);
 
+      setIsEnded(response.data.isEnded);
+
     } catch (error) {
       console.log(error);
     }
@@ -39,14 +42,18 @@ export default function ContestPage() {
   }, []);
 
   useEffect(() => {
-      if(timeLeft <= 0) return;
+    const timer = setInterval(() => {
+        setTimeLeft(prev => {
+            if (prev <= 1) {
+                clearInterval(timer);
+                return 0;
+            }
+            return prev - 1;
+        });
+    }, 1000);
 
-      const timer = setInterval(() => {
-          setTimeLeft(prev => Math.max(0, prev - 1));
-      }, 1000);
-
-      return () => clearInterval(timer);
-  }, [timeLeft > 0]);
+    return () => clearInterval(timer);
+  }, []);
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -85,6 +92,16 @@ export default function ContestPage() {
 
   const checkProgress = async () => {
       await getContest();
+  }
+
+  const endContest = async () => {
+    try {
+      const response = await axios.patch(`http://localhost:8000/contest/${contestId}/end`);
+      console.log(response.data.message);
+      await getContest();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (
@@ -134,14 +151,20 @@ export default function ContestPage() {
                   </td>
 
                   <td className="border px-4 py-3">
-                    <a
-                      href={`https://codeforces.com/problemset/problem/${problem.contestId}/${problem.index}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      {problem.name}
-                    </a>
+                    {isEnded ? (
+                        <span className="text-gray-500 cursor-not-allowed">
+                            {problem.name}
+                        </span>
+                    ) : (
+                        <a
+                            href={`https://codeforces.com/problemset/problem/${problem.contestId}/${problem.index}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline"
+                        >
+                            {problem.name}
+                        </a>
+                    )}
                   </td>
 
                   <td className="border px-4 py-3">{problem.rating}</td>
@@ -159,19 +182,21 @@ export default function ContestPage() {
 
         <div className="mt-6 flex gap-4">
           <button
-            className="
-              rounded-lg
-              bg-blue-600
-              px-5
-              py-2
-              font-medium
-              text-white
-              hover:bg-blue-700
-            "
+            disabled={isEnded}
+            className={`
+                rounded-lg
+                px-5
+                py-2
+                font-medium
+                text-white
+                ${isEnded
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"}
+            `}
             onClick={checkProgress}
-          >
+        >
             Check Progress
-          </button>
+        </button>
 
           <button
             className="
@@ -183,6 +208,8 @@ export default function ContestPage() {
               font-medium
               hover:bg-gray-50
             "
+            disabled={isEnded}
+            onClick={endContest}
           >
             End Contest
           </button>
