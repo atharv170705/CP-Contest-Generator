@@ -22,15 +22,20 @@ export default function ContestPage() {
       }));
 
       setProblems(formattedProblems);  
-  
-      const createdAt = new Date(response.data.createdAt);
-      const durationSeconds = response.data.duration * 60;
-      const elapsedSeconds = Math.floor((Date.now() - createdAt) / 1000);
-      const remaining = Math.max(0, durationSeconds - elapsedSeconds);
-
-      setTimeLeft(remaining);
-
+      
       setIsEnded(response.data.isEnded);
+
+      if (response.data.isEnded) {
+          setTimeLeft(0);
+      } else {
+          const createdAt = new Date(response.data.createdAt);
+          const durationSeconds = response.data.duration * 60;
+          const elapsedSeconds = Math.floor((Date.now() - createdAt) / 1000);
+          const remaining = Math.max(0, durationSeconds - elapsedSeconds);
+
+          setTimeLeft(remaining);
+      }
+
 
     } catch (error) {
       console.log(error);
@@ -41,19 +46,21 @@ export default function ContestPage() {
     getContest();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
+    if (isEnded) return;
+
     const timer = setInterval(() => {
-        setTimeLeft(prev => {
-            if (prev <= 1) {
-                clearInterval(timer);
-                return 0;
-            }
-            return prev - 1;
-        });
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+}, [isEnded]);
 
   const formatTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -98,6 +105,8 @@ export default function ContestPage() {
     try {
       const response = await axios.patch(`http://localhost:8000/contest/${contestId}/end`);
       console.log(response.data.message);
+      setIsEnded(true);
+      setTimeLeft(0); 
       await getContest();
     } catch (error) {
       console.log(error);
